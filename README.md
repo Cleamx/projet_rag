@@ -17,6 +17,8 @@ But: objectif court pour tester l'intégration / comportement de l'API Mistral s
 ## Configuration
 Créer un fichier `.env` ou exporter les variables d'environnement:
 ```bash
+MISTRAL_API_KEY = votre_cle
+# or
 export MISTRAL_API_KEY="votre_cle"
 ```
 
