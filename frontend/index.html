@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chat RAG</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <div id="login-container">
+            <h2>Identification</h2>
+            <input type="number" id="user-ad-id-input" placeholder="Entrez votre User AD ID">
+            <button id="login-button">Commencer</button>
+        </div>
+
+        <div id="chat-container" class="hidden">
+            <div id="chat-log"></div>
+            <div id="input-container">
+                <input type="text" id="user-input" placeholder="Posez votre question...">
+                <button id="send-button">Envoyer</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
