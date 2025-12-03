@@ -97,9 +97,49 @@ def ask_question(request: AskRequest, session: Session = Depends(get_session)):
         return {
             "question": db_question.question_label,
             "answer": db_reponse.reponse_label,
+            "response_id": db_reponse.id,
             "sources": sources  # Ajout des sources GLPI utilisées
         }
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class FeedbackRequest(BaseModel):
+    response_id: int
+    is_valid: bool  # True = bonne réponse, False = mauvaise réponse
+
+
+@app.post("/feedback/")
+def submit_feedback(request: FeedbackRequest, session: Session = Depends(get_session)):
+    """
+    Endpoint pour enregistrer le feedback utilisateur sur une réponse
+    validite: 1 = bonne réponse, -1 = mauvaise réponse
+    """
+    try:
+        # Récupérer la réponse
+        db_reponse = session.get(Reponse, request.response_id)
+        if not db_reponse:
+            raise HTTPException(status_code=404, detail="Réponse non trouvée")
+        
+        # Mettre à jour la validité (1 = bonne, -1 = mauvaise)
+        db_reponse.validite = 1 if request.is_valid else -1
+        
+        # Si bonne réponse, incrémenter le compteur de résolution
+        if request.is_valid:
+            db_reponse.nombre_resolution = (db_reponse.nombre_resolution or 0) + 1
+        
+        session.add(db_reponse)
+        session.commit()
+        
+        return {
+            "success": True,
+            "message": "Feedback enregistré",
+            "validite": db_reponse.validite,
+            "nombre_resolution": db_reponse.nombre_resolution
+        }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
