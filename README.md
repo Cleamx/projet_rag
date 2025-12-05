@@ -283,7 +283,6 @@ environment:
   - GLPI_USER_TOKEN=your_user_token
 ```
 
-**Documentation API GLPI** : https://github.com/glpi-project/glpi/blob/main/apirest.md
 
 ---
 

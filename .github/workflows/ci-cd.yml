@@ -2,30 +2,129 @@ name: CI/CD Pipeline
 
 on:
   push:
+    branches: [ "main", "test_clem" ]
+  pull_request:
     branches: [ "main" ]
 
 jobs:
-  build-and-push:
+  lint:
+    name: Linting & Code Quality
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # (Optionnel) Ajouter une étape de tests ici
-    # - name: Run tests
-    #   run: |
-    #     pip install pytest
-    #     pytest backend/tests
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
 
-    - name: Login to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Install linting tools
+        run: |
+          pip install flake8 black isort
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: ./backend
-        push: true
-        tags: your-dockerhub-username/rag-fastapi-app:latest
+      - name: Run Black (formatting check)
+        run: black --check backend/app
+
+      - name: Run isort (imports check)
+        run: isort --check-only backend/app
+
+      - name: Run Flake8 (linting)
+        run: flake8 backend/app --max-line-length=120 --extend-ignore=E203,W503
+
+  test-backend:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-cov pytest-asyncio httpx
+
+      - name: Run unit tests
+        run: |
+          cd backend
+          pytest tests/ -v --cov=app --cov-report=term-missing
+
+  test-integration:
+    name: Integration Tests (Docker)
+    runs-on: ubuntu-latest
+    needs: test-backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start Docker Compose services
+        run: |
+          docker-compose up -d --build
+          sleep 10
+
+      - name: Wait for services to be healthy
+        run: |
+          timeout 60 bash -c 'until docker exec fastapi_api curl -f http://localhost:8000/docs > /dev/null 2>&1; do sleep 2; done'
+
+      - name: Run integration tests
+        run: |
+          # Test API health
+          docker exec fastapi_api curl -f http://localhost:8000/docs || exit 1
+          
+          # Test GLPI stats endpoint
+          docker exec fastapi_api curl -f http://localhost:8000/glpi/stats || exit 1
+          
+          # Test database connection
+          docker exec postgres_db psql -U user -d mydatabase -c "SELECT 1;" || exit 1
+
+      - name: Run Python integration test script
+        run: |
+          pip install requests
+          python3 test_rag.py
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker-compose logs api
+          docker-compose logs db
+
+      - name: Cleanup
+        if: always()
+        run: docker-compose down -v
+
+  build-and-push:
+    name: Build & Push Docker Image
+    runs-on: ubuntu-latest
+    needs: test-integration
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:${{ github.sha }}
+          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:buildcache,mode=max

@@ -13,7 +13,11 @@ from .database import engine, create_db_and_tables, DATABASE_URL
 from .models import Question, Reponse
 from . import llm
 
-app = FastAPI(title="RAG GLPI avec Ollama + Mistral")
+app = FastAPI(
+    title="RAG GLPI avec Ollama + Mistral",
+    docs_url=None,  # Désactive /docs
+    redoc_url=None  # Désactive /redoc
+)
 
 app.add_middleware(
     CORSMiddleware,
