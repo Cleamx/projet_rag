@@ -71,7 +71,8 @@ class TestGLPIEndpoints:
 class TestAskEndpoint:
     """Tests de l'endpoint /ask/"""
 
-    @pytest.mark.skip(reason="Nécessite Ollama running - test manuel uniquement")
+    @pytest.mark.skip(
+            reason="Nécessite Ollama running - test manuel uniquement")
     def test_ask_question_vpn(self):
         """Test une question sur le VPN"""
         response = client.post(
@@ -85,12 +86,14 @@ class TestAskEndpoint:
         assert "sources" in data
         assert len(data["sources"]) > 0
 
-    @pytest.mark.skip(reason="Nécessite Ollama running - test manuel uniquement")
+    @pytest.mark.skip(
+            reason="Nécessite Ollama running - test manuel uniquement")
     def test_ask_question_imprimante(self):
         """Test une question sur l'imprimante"""
         response = client.post(
             "/ask/",
-            json={"user_ad_id": 2, "question": "Mon imprimante ne fonctionne pas"},
+            json={"user_ad_id": 2, 
+                  "question": "Mon imprimante ne fonctionne pas"},
         )
         assert response.status_code == 200
         data = response.json()
@@ -99,9 +102,8 @@ class TestAskEndpoint:
         assert "sources" in data
 
     def test_ask_missing_fields(self):
-        """Test avec des champs manquants"""
         response = client.post("/ask/", json={"user_ad_id": 1})
-        assert response.status_code == 422  # Validation error
+        assert response.status_code == 422
 
     def test_ask_empty_question(self):
         """Test avec une question vide"""

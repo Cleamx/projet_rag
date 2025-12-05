@@ -1,20 +1,21 @@
-from typing import List, Optional, Any
 import os
-from sqlmodel import Field, Relationship, SQLModel, Column
-from sqlalchemy import Text
+from typing import Any
+from typing import List
+from typing import Optional
 
-# Import conditionnel de pgvector (seulement si PostgreSQL)
+from sqlalchemy import Text
+from sqlmodel import Column, Field, Relationship, SQLModel
+
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./rag_database.db")
 if "postgresql" in DATABASE_URL:
     from pgvector.sqlalchemy import Vector
-    # nomic-embed-text génère des embeddings de 768 dimensions
     embedding_column = Column(Vector(768))
 else:
-    # Pour SQLite, on stocke l'embedding en JSON/Text
     embedding_column = Column(Text)
 
 
 class Reponse(SQLModel, table=True):
+
     id: Optional[int] = Field(default=None, primary_key=True)
     reponse_label: str
     validite: Optional[int] = Field(default=0)
@@ -25,6 +26,7 @@ class Reponse(SQLModel, table=True):
 
 
 class Question(SQLModel, table=True):
+
     id: Optional[int] = Field(default=None, primary_key=True)
     user_ad_id: int
     question_label: str

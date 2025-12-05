@@ -1,9 +1,8 @@
-"""
-Module pour simuler les données GLPI (tickets, FAQ, KB articles)
-En attendant la vraie connexion à GLPI
-"""
-from typing import List, Dict, Any
-from datetime import datetime, timedelta
+from typing import List
+from typing import Dict
+from typing import Any
+from datetime import datetime
+from datetime import timedelta
 import random
 
 
@@ -20,64 +19,82 @@ class GLPIMockData:
         ticket_templates = [
             {
                 "title": "Problème de connexion VPN",
-                "description": "Impossible de se connecter au VPN de l'entreprise depuis ce matin. Message d'erreur: timeout.",
-                "solution": "Vérifier que le client VPN est à jour. Réinitialiser les paramètres réseau. Contacter le support si le problème persiste.",
+                "description": """Impossible de se connecter au VPN de
+                 l'entreprise depuis ce matin. Message d'erreur: timeout.""",
+                "solution": """Vérifier que le client VPN est à jour.
+                 Réinitialiser les paramètres réseau. Contacter le support si
+                 le problème persiste.""",
                 "category": "Réseau",
                 "status": "Résolu",
                 "priority": "Haute"
             },
             {
                 "title": "Imprimante ne répond pas",
-                "description": "L'imprimante du bureau 304 ne répond plus. Aucune impression n'est possible.",
-                "solution": "Redémarrer l'imprimante et vérifier la connexion réseau. Réinstaller les pilotes si nécessaire.",
+                "description": """L'imprimante du bureau 304 ne répond
+                 plus. Aucune impression n'est possible.""",
+                "solution": """Redémarrer l'imprimante et vérifier la
+                 connexion réseau. Réinstaller les pilotes si nécessaire.""",
                 "category": "Matériel",
                 "status": "Résolu",
                 "priority": "Moyenne"
             },
             {
                 "title": "Mot de passe oublié",
-                "description": "Utilisateur a oublié son mot de passe Active Directory et ne peut plus se connecter.",
-                "solution": "Utiliser l'outil de réinitialisation en libre-service ou contacter le helpdesk pour un reset manuel.",
+                "description": """Utilisateur a oublié son mot de passe Active
+                 Directory et ne peut plus se connecter.""",
+                "solution": """Utiliser l'outil de réinitialisation en libre
+                -service ou contacter le helpdesk pour un reset manuel.""",
                 "category": "Compte utilisateur",
                 "status": "Résolu",
                 "priority": "Haute"
             },
             {
                 "title": "Écran bleu Windows",
-                "description": "Écran bleu récurrent (BSOD) sur le poste de travail. Erreur MEMORY_MANAGEMENT.",
-                "solution": "Tester la mémoire RAM avec memtest86. Remplacer les barrettes défectueuses. Mettre à jour les drivers.",
+                "description": """Écran bleu récurrent (BSOD) sur le poste de
+                 travail. Erreur MEMORY_MANAGEMENT.""",
+                "solution": """Tester la mémoire RAM avec memtest86. Remplacer
+                les barrettes défectueuses. Mettre à jour les drivers.""",
                 "category": "Système",
                 "status": "Résolu",
                 "priority": "Haute"
             },
             {
                 "title": "Demande de nouveau logiciel",
-                "description": "Besoin d'installer Adobe Photoshop pour le service communication.",
-                "solution": "Vérifier la licence disponible. Installer via le centre logiciel ou manuellement avec clé de licence.",
+                "description": """Besoin d'installer Adobe Photoshop pour le
+                 service communication.""",
+                "solution": """Vérifier la licence disponible. Installer via
+                 le centre logiciel ou manuellement avec clé de licence.""",
                 "category": "Logiciel",
                 "status": "En cours",
                 "priority": "Moyenne"
             },
             {
                 "title": "Sauvegarde échouée",
-                "description": "La sauvegarde automatique du serveur de fichiers a échoué cette nuit.",
-                "solution": "Vérifier l'espace disque disponible sur le NAS. Relancer la sauvegarde manuellement. Vérifier les logs.",
+                "description": """La sauvegarde automatique du serveur de
+                 fichiers a échoué cette nuit.""",
+                "solution": """Vérifier l'espace disque disponible sur le NAS.
+                 Relancer la sauvegarde manuellement. Vérifier les logs.""",
                 "category": "Infrastructure",
                 "status": "Résolu",
                 "priority": "Haute"
             },
             {
                 "title": "Messagerie lente",
-                "description": "Outlook est très lent au démarrage et à la réception des emails.",
-                "solution": "Archiver les anciens emails. Vider le cache Outlook. Réparer le profil si nécessaire.",
+                "description": """Outlook est très lent au démarrage et à la
+                 réception des emails.""",
+                "solution": """Archiver les anciens emails. Vider le cache
+                 Outlook. Réparer le profil si nécessaire.""",
                 "category": "Messagerie",
                 "status": "Résolu",
                 "priority": "Moyenne"
             },
             {
                 "title": "Accès refusé au dossier partagé",
-                "description": "Impossible d'accéder au dossier \\\\serveur\\partage\\compta",
-                "solution": "Vérifier les permissions NTFS et les partages. Ajouter l'utilisateur au groupe approprié dans Active Directory.",
+                "description": """Impossible d'accéder au dossier
+                 \\\\serveur\\partage\\compta""",
+                "solution": """Vérifier les permissions NTFS et les partages.
+                 Ajouter l'utilisateur au groupe approprié dans Active
+                 Directory.""",
                 "category": "Réseau",
                 "status": "Résolu",
                 "priority": "Moyenne"
@@ -94,8 +111,11 @@ class GLPIMockData:
                 "category": template["category"],
                 "status": template["status"],
                 "priority": template["priority"],
-                "created_date": (datetime.now() - timedelta(days=random.randint(1, 60))).isoformat(),
-                "resolved_date": (datetime.now() - timedelta(days=random.randint(0, 30))).isoformat() if template["status"] == "Résolu" else None,
+                "created_date": (datetime.now() - timedelta(
+                    days=random.randint(1, 60))).isoformat(),
+                "resolved_date": (datetime.now() - timedelta(
+                    days=random.randint(0, 30))).isoformat()
+                if template["status"] == "Résolu" else None,
                 "requester": f"user{i}@entreprise.com",
                 "technician": f"tech{random.randint(1, 3)}@entreprise.com"
             }
@@ -132,7 +152,8 @@ class GLPIMockData:
                 """,
                 "category": "Réseau",
                 "views": 245,
-                "last_updated": (datetime.now() - timedelta(days=15)).isoformat()
+                "last_updated": (
+                    datetime.now() - timedelta(days=15)).isoformat()
             },
             {
                 "id": 2,
@@ -161,7 +182,8 @@ Si le reset en libre-service échoue, contacter:
                 """,
                 "category": "Compte utilisateur",
                 "views": 523,
-                "last_updated": (datetime.now() - timedelta(days=5)).isoformat()
+                "last_updated": (
+                    datetime.now() - timedelta(days=5)).isoformat()
             },
             {
                 "id": 3,
@@ -191,7 +213,8 @@ Si le reset en libre-service échoue, contacter:
                 """,
                 "category": "Messagerie",
                 "views": 187,
-                "last_updated": (datetime.now() - timedelta(days=30)).isoformat()
+                "last_updated": (
+                    datetime.now() - timedelta(days=30)).isoformat()
             }
         ]
         return articles
@@ -202,35 +225,46 @@ Si le reset en libre-service échoue, contacter:
             {
                 "id": 1,
                 "question": "Comment changer mon mot de passe Windows ?",
-                "answer": "Appuyez sur Ctrl+Alt+Suppr et sélectionnez 'Modifier le mot de passe'. Ou utilisez le portail en libre-service: https://password.entreprise.com",
+                "answer": """Appuyez sur Ctrl+Alt+Suppr et sélectionnez
+                 'Modifier le mot de passe'. Ou utilisez le portail en libre
+                 -service: https://password.entreprise.com""",
                 "category": "Compte",
                 "popularity": 95
             },
             {
                 "id": 2,
                 "question": "Où trouver les pilotes d'imprimante ?",
-                "answer": "Les pilotes sont disponibles sur l'intranet dans la section 'Ressources IT' ou sur \\\\serveur\\drivers\\imprimantes",
+                "answer": """Les pilotes sont disponibles sur l'intranet dans
+                 la section 'Ressources IT' ou sur
+                  \\\\serveur\\drivers\\imprimantes""",
                 "category": "Matériel",
                 "popularity": 78
             },
             {
                 "id": 3,
                 "question": "Comment accéder au VPN en télétravail ?",
-                "answer": "Utilisez Cisco AnyConnect avec l'adresse vpn.entreprise.com et vos identifiants habituels. Guide complet disponible sur l'intranet.",
+                "answer": """Utilisez Cisco AnyConnect avec l'adresse
+                 vpn.entreprise.com et vos identifiants habituels.
+                 Guide complet disponible sur l'intranet.""",
                 "category": "Réseau",
                 "popularity": 89
             },
             {
                 "id": 4,
-                "question": "Quelle est la procédure pour demander un nouveau logiciel ?",
-                "answer": "Créez un ticket dans GLPI en précisant le logiciel souhaité, l'usage prévu et la validation de votre manager.",
+                "question": """Quelle est la procédure pour demander un
+                 nouveau logiciel ?""",
+                "answer": """Créez un ticket dans GLPI en précisant le
+                 logiciel souhaité, l'usage prévu et la validation de votre
+                 manager.""",
                 "category": "Logiciel",
                 "popularity": 65
             },
             {
                 "id": 5,
                 "question": "Comment configurer ma messagerie sur mobile ?",
-                "answer": "Installez Microsoft Outlook sur votre mobile. Ajoutez votre adresse email professionnelle. Le profil Exchange se configurera automatiquement.",
+                "answer": """Installez Microsoft Outlook sur votre mobile.
+                 Ajoutez votre adresse email professionnelle. Le profil
+                 Exchange se configurera automatiquement.""",
                 "category": "Messagerie",
                 "popularity": 72
             }
@@ -238,22 +272,23 @@ Si le reset en libre-service échoue, contacter:
         return faq
 
     def search_all(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
-        """
-        Recherche dans toutes les sources GLPI mockées
-        Retourne une liste de documents avec leur contenu et métadonnées
-        """
         results = []
 
-        # Recherche dans les tickets
         for ticket in self.tickets:
-            score = self._simple_score(
-                query, ticket["title"] + " " + ticket["description"] + " " + ticket.get("solution", ""))
+            ticket_text = " ".join(filter(None, [
+                ticket["title"],
+                ticket["description"],
+                ticket.get("solution", "")
+            ]))
+            score = self._simple_score(query, ticket_text)
             if score > 0:
                 results.append({
                     "source": "ticket",
                     "id": ticket["id"],
                     "title": ticket["title"],
-                    "content": f"**Problème**: {ticket['description']}\n\n**Solution**: {ticket['solution']}",
+                    "content": f"""**Problème**:
+                     {ticket['description']}\n\n
+                     **Solution**: {ticket['solution']}""",
                     "metadata": {
                         "category": ticket["category"],
                         "status": ticket["status"],
@@ -262,7 +297,6 @@ Si le reset en libre-service échoue, contacter:
                     "score": score
                 })
 
-        # Recherche dans les articles KB
         for article in self.kb_articles:
             score = self._simple_score(
                 query, article["title"] + " " + article["content"])
@@ -279,7 +313,6 @@ Si le reset en libre-service échoue, contacter:
                     "score": score
                 })
 
-        # Recherche dans la FAQ
         for faq in self.faq_items:
             score = self._simple_score(
                 query, faq["question"] + " " + faq["answer"])
@@ -288,7 +321,8 @@ Si le reset en libre-service échoue, contacter:
                     "source": "faq",
                     "id": faq["id"],
                     "title": faq["question"],
-                    "content": f"**Question**: {faq['question']}\n\n**Réponse**: {faq['answer']}",
+                    "content": f"""**Question**: {faq['question']}
+                     \n\n**Réponse**: {faq['answer']}""",
                     "metadata": {
                         "category": faq["category"],
                         "popularity": faq["popularity"]
@@ -296,20 +330,17 @@ Si le reset en libre-service échoue, contacter:
                     "score": score
                 })
 
-        # Trier par score et limiter
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
 
     def _simple_score(self, query: str, text: str) -> float:
-        """Scoring simple basé sur la présence de mots-clés"""
+
         query_lower = query.lower()
         text_lower = text.lower()
 
-        # Score de base si le texte contient la requête complète
         if query_lower in text_lower:
             return 1.0
 
-        # Score basé sur les mots individuels
         query_words = query_lower.split()
         matches = sum(1 for word in query_words if len(
             word) > 2 and word in text_lower)
@@ -320,5 +351,4 @@ Si le reset en libre-service échoue, contacter:
         return matches / len(query_words)
 
 
-# Instance globale pour réutilisation
 glpi_mock = GLPIMockData()
