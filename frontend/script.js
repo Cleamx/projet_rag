@@ -41,11 +41,11 @@ navLinks.forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
         const page = link.dataset.page;
-        
+
         // Update active nav link
         navLinks.forEach(l => l.classList.remove('active'));
         link.classList.add('active');
-        
+
         // Show corresponding page
         Object.values(pages).forEach(p => p.classList.add('hidden'));
         if (pages[page]) {
@@ -71,7 +71,7 @@ function handleLogin() {
         navUser.classList.remove('hidden');
         userName.textContent = `Utilisateur #${id}`;
         showToast('Connexion réussie !', 'success');
-        
+
         // Focus on input
         setTimeout(() => userInput.focus(), 300);
     } else {
@@ -171,7 +171,7 @@ function appendMessage(text, sender, sources = null, responseId = null) {
     messageCounter++;
     const messageId = `msg-${messageCounter}`;
     const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    
+
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', `${sender}-message`);
     messageDiv.id = messageId;
@@ -243,11 +243,11 @@ async function handleFeedback(button) {
     const rating = button.dataset.rating;
     const container = document.getElementById(`feedback-${messageId}`);
     const isValid = rating === 'positive';
-    
+
     // Désactiver les boutons pendant l'envoi
     const allBtns = container.querySelectorAll('.feedback-btn');
     allBtns.forEach(btn => btn.disabled = true);
-    
+
     try {
         // Envoyer le feedback au serveur
         const response = await fetch(`${API_URL}/feedback/`, {
@@ -258,11 +258,11 @@ async function handleFeedback(button) {
                 is_valid: isValid
             })
         });
-        
+
         if (!response.ok) {
             throw new Error('Erreur lors de l\'envoi du feedback');
         }
-        
+
         // Masquer les boutons non sélectionnés
         allBtns.forEach(btn => {
             if (btn === button) {
@@ -271,23 +271,23 @@ async function handleFeedback(button) {
                 btn.style.display = 'none';
             }
         });
-        
+
         // Ajouter le message de remerciement
         const thanks = document.createElement('span');
         thanks.classList.add('feedback-thanks');
         thanks.innerHTML = '<i class="fas fa-check"></i> Merci pour votre retour !';
         container.appendChild(thanks);
-        
+
         // Masquer le label
         container.querySelector('.feedback-label').style.display = 'none';
-        
+
         // Afficher le toast
         const messages = {
             positive: 'Merci ! Votre retour positif a été enregistré 😊',
             negative: 'Merci pour votre retour. Nous allons nous améliorer !'
         };
         showToast(messages[rating], 'success');
-        
+
     } catch (error) {
         console.error('Erreur feedback:', error);
         showToast('Erreur lors de l\'envoi du feedback', 'error');
@@ -329,20 +329,20 @@ function getWelcomeMessageHTML() {
 function showToast(message, type = 'success') {
     const toast = document.createElement('div');
     toast.classList.add('toast', type);
-    
+
     const icons = {
         success: 'fa-check-circle',
         error: 'fa-exclamation-circle',
         warning: 'fa-exclamation-triangle'
     };
-    
+
     toast.innerHTML = `
         <i class="fas ${icons[type]}"></i>
         <span>${message}</span>
     `;
-    
+
     toastContainer.appendChild(toast);
-    
+
     // Remove after 4 seconds
     setTimeout(() => {
         toast.style.animation = 'slideInRight 0.3s ease reverse';
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .shake { animation: shake 0.5s ease; }
     `;
     document.head.appendChild(style);
-    
+
     // Re-attach quick-btn listeners after DOM is ready
     document.querySelectorAll('.quick-btn').forEach(btn => {
         btn.addEventListener('click', () => {

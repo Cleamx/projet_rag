@@ -23,23 +23,23 @@
     --gray-100: #f1f5f9;
     --gray-50: #f8fafc;
     --white: #ffffff;
-    
+
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
     --gradient-secondary: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%);
     --gradient-dark: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    
+
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    
+
     /* Spacing */
     --navbar-height: 64px;
     --sidebar-width: 280px;
-    
+
     /* Border Radius */
     --radius-sm: 6px;
     --radius: 8px;
@@ -47,7 +47,7 @@
     --radius-lg: 16px;
     --radius-xl: 24px;
     --radius-full: 9999px;
-    
+
     /* Transitions */
     --transition-fast: 150ms ease;
     --transition: 200ms ease;
@@ -307,8 +307,15 @@ body {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* ============================================
@@ -583,8 +590,15 @@ body {
 }
 
 @keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .message.user-message {
@@ -753,13 +767,31 @@ body {
     animation: bounce 1.4s infinite ease-in-out both;
 }
 
-.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-.typing-indicator span:nth-child(3) { animation-delay: 0s; }
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0s;
+}
 
 @keyframes bounce {
-    0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
-    40% { transform: scale(1); opacity: 1; }
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .input-wrapper {
@@ -948,9 +980,17 @@ kbd {
     border-radius: var(--radius);
 }
 
-.status-open { background: var(--danger); }
-.status-pending { background: var(--warning); }
-.status-resolved { background: var(--success); }
+.status-open {
+    background: var(--danger);
+}
+
+.status-pending {
+    background: var(--warning);
+}
+
+.status-resolved {
+    background: var(--success);
+}
 
 .ticket-content {
     flex: 1;
@@ -981,9 +1021,17 @@ kbd {
     gap: 6px;
 }
 
-.priority.high { color: var(--danger); }
-.priority.medium { color: var(--warning); }
-.priority.low { color: var(--success); }
+.priority.high {
+    color: var(--danger);
+}
+
+.priority.medium {
+    color: var(--warning);
+}
+
+.priority.low {
+    color: var(--success);
+}
 
 .ticket-id {
     font-weight: 600;
@@ -1130,21 +1178,44 @@ kbd {
 }
 
 @keyframes slideInRight {
-    from { opacity: 0; transform: translateX(100px); }
-    to { opacity: 1; transform: translateX(0); }
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
-.toast.success { border-left: 4px solid var(--success); }
-.toast.error { border-left: 4px solid var(--danger); }
-.toast.warning { border-left: 4px solid var(--warning); }
+.toast.success {
+    border-left: 4px solid var(--success);
+}
+
+.toast.error {
+    border-left: 4px solid var(--danger);
+}
+
+.toast.warning {
+    border-left: 4px solid var(--warning);
+}
 
 .toast i {
     font-size: 1.25rem;
 }
 
-.toast.success i { color: var(--success); }
-.toast.error i { color: var(--danger); }
-.toast.warning i { color: var(--warning); }
+.toast.success i {
+    color: var(--success);
+}
+
+.toast.error i {
+    color: var(--danger);
+}
+
+.toast.warning i {
+    color: var(--warning);
+}
 
 /* ============================================
    Utility Classes
@@ -1160,7 +1231,7 @@ kbd {
     .sidebar {
         width: 240px;
     }
-    
+
     .content {
         margin-left: 240px;
     }
@@ -1170,24 +1241,24 @@ kbd {
     .nav-links span {
         display: none;
     }
-    
+
     .sidebar {
         display: none;
     }
-    
+
     .content {
         margin-left: 0;
         padding: 16px;
     }
-    
+
     .message {
         max-width: 90%;
     }
-    
+
     .quick-actions {
         flex-direction: column;
     }
-    
+
     .login-features {
         flex-direction: column;
         gap: 16px;

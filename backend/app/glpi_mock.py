@@ -9,12 +9,12 @@ import random
 
 class GLPIMockData:
     """Générateur de données GLPI mockées pour le RAG"""
-    
+
     def __init__(self):
         self.tickets = self._generate_tickets()
         self.kb_articles = self._generate_kb_articles()
         self.faq_items = self._generate_faq_items()
-    
+
     def _generate_tickets(self) -> List[Dict[str, Any]]:
         """Génère des tickets GLPI mockés"""
         ticket_templates = [
@@ -83,7 +83,7 @@ class GLPIMockData:
                 "priority": "Moyenne"
             }
         ]
-        
+
         tickets = []
         for i, template in enumerate(ticket_templates, 1):
             ticket = {
@@ -100,9 +100,9 @@ class GLPIMockData:
                 "technician": f"tech{random.randint(1, 3)}@entreprise.com"
             }
             tickets.append(ticket)
-        
+
         return tickets
-    
+
     def _generate_kb_articles(self) -> List[Dict[str, Any]]:
         """Génère des articles de base de connaissances mockés"""
         articles = [
@@ -195,7 +195,7 @@ Si le reset en libre-service échoue, contacter:
             }
         ]
         return articles
-    
+
     def _generate_faq_items(self) -> List[Dict[str, Any]]:
         """Génère des items FAQ mockés"""
         faq = [
@@ -236,17 +236,18 @@ Si le reset en libre-service échoue, contacter:
             }
         ]
         return faq
-    
+
     def search_all(self, query: str, limit: int = 5) -> List[Dict[str, Any]]:
         """
         Recherche dans toutes les sources GLPI mockées
         Retourne une liste de documents avec leur contenu et métadonnées
         """
         results = []
-        
+
         # Recherche dans les tickets
         for ticket in self.tickets:
-            score = self._simple_score(query, ticket["title"] + " " + ticket["description"] + " " + ticket.get("solution", ""))
+            score = self._simple_score(
+                query, ticket["title"] + " " + ticket["description"] + " " + ticket.get("solution", ""))
             if score > 0:
                 results.append({
                     "source": "ticket",
@@ -260,10 +261,11 @@ Si le reset en libre-service échoue, contacter:
                     },
                     "score": score
                 })
-        
+
         # Recherche dans les articles KB
         for article in self.kb_articles:
-            score = self._simple_score(query, article["title"] + " " + article["content"])
+            score = self._simple_score(
+                query, article["title"] + " " + article["content"])
             if score > 0:
                 results.append({
                     "source": "kb_article",
@@ -276,10 +278,11 @@ Si le reset en libre-service échoue, contacter:
                     },
                     "score": score
                 })
-        
+
         # Recherche dans la FAQ
         for faq in self.faq_items:
-            score = self._simple_score(query, faq["question"] + " " + faq["answer"])
+            score = self._simple_score(
+                query, faq["question"] + " " + faq["answer"])
             if score > 0:
                 results.append({
                     "source": "faq",
@@ -292,27 +295,28 @@ Si le reset en libre-service échoue, contacter:
                     },
                     "score": score
                 })
-        
+
         # Trier par score et limiter
         results.sort(key=lambda x: x["score"], reverse=True)
         return results[:limit]
-    
+
     def _simple_score(self, query: str, text: str) -> float:
         """Scoring simple basé sur la présence de mots-clés"""
         query_lower = query.lower()
         text_lower = text.lower()
-        
+
         # Score de base si le texte contient la requête complète
         if query_lower in text_lower:
             return 1.0
-        
+
         # Score basé sur les mots individuels
         query_words = query_lower.split()
-        matches = sum(1 for word in query_words if len(word) > 2 and word in text_lower)
-        
+        matches = sum(1 for word in query_words if len(
+            word) > 2 and word in text_lower)
+
         if len(query_words) == 0:
             return 0.0
-        
+
         return matches / len(query_words)
 
 

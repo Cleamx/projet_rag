@@ -27,9 +27,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+
 
 def get_session():
     with Session(engine) as session:
@@ -39,6 +41,7 @@ def get_session():
 class AskRequest(BaseModel):
     user_ad_id: int
     question: str
+
 
 @app.get("/glpi/stats")
 def get_glpi_stats():
@@ -51,11 +54,12 @@ def get_glpi_stats():
         "total_entries": len(glpi_mock.tickets) + len(glpi_mock.kb_articles) + len(glpi_mock.faq_items)
     }
 
+
 @app.get("/glpi/preview/{source_type}")
 def preview_glpi_data(source_type: str):
     """Aperçu des données GLPI par type (tickets, kb_articles, faq)"""
     from .glpi_mock import glpi_mock
-    
+
     if source_type == "tickets":
         return {"data": glpi_mock.tickets[:3]}  # 3 premiers tickets
     elif source_type == "kb_articles":
@@ -65,6 +69,7 @@ def preview_glpi_data(source_type: str):
     else:
         raise HTTPException(status_code=404, detail="Type de source inconnu")
 
+
 @app.post("/ask/")
 def ask_question(request: AskRequest, session: Session = Depends(get_session)):
     """
@@ -72,7 +77,7 @@ def ask_question(request: AskRequest, session: Session = Depends(get_session)):
     """
     try:
         embedding = llm.get_embedding(request.question)
-        
+
         # Pour SQLite, sérialiser l'embedding en JSON
         embedding_to_store = embedding
         if "sqlite" in DATABASE_URL:
@@ -125,17 +130,18 @@ def submit_feedback(request: FeedbackRequest, session: Session = Depends(get_ses
         db_reponse = session.get(Reponse, request.response_id)
         if not db_reponse:
             raise HTTPException(status_code=404, detail="Réponse non trouvée")
-        
+
         # Mettre à jour la validité (1 = bonne, -1 = mauvaise)
         db_reponse.validite = 1 if request.is_valid else -1
-        
+
         # Si bonne réponse, incrémenter le compteur de résolution
         if request.is_valid:
-            db_reponse.nombre_resolution = (db_reponse.nombre_resolution or 0) + 1
-        
+            db_reponse.nombre_resolution = (
+                db_reponse.nombre_resolution or 0) + 1
+
         session.add(db_reponse)
         session.commit()
-        
+
         return {
             "success": True,
             "message": "Feedback enregistré",
@@ -150,6 +156,8 @@ def submit_feedback(request: FeedbackRequest, session: Session = Depends(get_ses
 
 # Monter le frontend en dernier pour servir les fichiers statiques
 # Dans Docker, le frontend est à /app/frontend
-frontend_path = Path("/app/frontend") if Path("/app/frontend").exists() else Path(__file__).parent.parent.parent / "frontend"
+frontend_path = Path("/app/frontend") if Path("/app/frontend").exists(
+) else Path(__file__).parent.parent.parent / "frontend"
 if frontend_path.exists():
-    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="static")
+    app.mount("/", StaticFiles(directory=str(frontend_path),
+              html=True), name="static")

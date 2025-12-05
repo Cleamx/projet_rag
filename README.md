@@ -31,7 +31,7 @@ open http://localhost:8000
 | Service | URL | Description |
 |---------|-----|-------------|
 | **Frontend** | http://localhost:8000 | Interface chat |
-| **API** | http://localhost:8000/docs | Documentation Swagger |
+| **API** | http://localhost:8000/glpi/stats | Endpoints API REST |
 | **PostgreSQL** | localhost:5432 | Base de données (user/password) |
 | **Ollama** | http://localhost:11434 | Service LLM local |
 
