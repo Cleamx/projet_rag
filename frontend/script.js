@@ -1,260 +1,271 @@
 // ============================================
-// GLPI Assistant - Modern Frontend JavaScript
+// UNIVERSITÀ DI CORSICA - CAMPUS NUMÉRIQUE
+// Assistant IA - Script JavaScript
 // ============================================
-
-// DOM Elements
-const loginPage = document.getElementById('login-page');
-const chatPage = document.getElementById('chat-page');
-const ticketsPage = document.getElementById('tickets-page');
-const knowledgePage = document.getElementById('knowledge-page');
-const statsPage = document.getElementById('stats-page');
-
-const loginButton = document.getElementById('login-button');
-const logoutButton = document.getElementById('logout-btn');
-const userInput = document.getElementById('user-input');
-const sendButton = document.getElementById('send-button');
-const chatLog = document.getElementById('chat-log');
-const userIdInput = document.getElementById('user-ad-id-input');
-const navUser = document.getElementById('nav-user');
-const userName = document.getElementById('user-name');
-const typingIndicator = document.getElementById('typing-indicator');
-const newChatBtn = document.getElementById('new-chat-btn');
-const toastContainer = document.getElementById('toast-container');
 
 // Configuration
 const API_URL = "http://localhost:8000";
-let userAdId = null;
+let userAdId = 1; // Utilisateur par défaut (déjà connecté via l'ENT)
 let messageCounter = 0;
 
+// DOM Elements
+const chatLog = document.getElementById('chat-log');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+const typingIndicator = document.getElementById('typing-indicator');
+const toastContainer = document.getElementById('toast-container');
+
 // ============================================
-// Navigation
+// Event Listeners
 // ============================================
-const navLinks = document.querySelectorAll('.nav-link');
-const pages = {
-    chat: chatPage,
-    tickets: ticketsPage,
-    knowledge: knowledgePage,
-    stats: statsPage
-};
+document.addEventListener('DOMContentLoaded', () => {
+    // Auto-resize textarea
+    userInput.addEventListener('input', () => {
+        userInput.style.height = 'auto';
+        userInput.style.height = userInput.scrollHeight + 'px';
+    });
 
-navLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const page = link.dataset.page;
+    // Send message on button click
+    sendButton.addEventListener('click', sendMessage);
 
-        // Update active nav link
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-
-        // Show corresponding page
-        Object.values(pages).forEach(p => p.classList.add('hidden'));
-        if (pages[page]) {
-            pages[page].classList.remove('hidden');
+    // Send message on Enter key (Shift+Enter for new line)
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
         }
     });
-});
 
-// ============================================
-// Authentication
-// ============================================
-loginButton.addEventListener('click', handleLogin);
-userIdInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleLogin();
-});
-
-function handleLogin() {
-    const id = parseInt(userIdInput.value, 10);
-    if (id && !isNaN(id)) {
-        userAdId = id;
-        loginPage.classList.add('hidden');
-        chatPage.classList.remove('hidden');
-        navUser.classList.remove('hidden');
-        userName.textContent = `Utilisateur #${id}`;
-        showToast('Connexion réussie !', 'success');
-
-        // Focus on input
-        setTimeout(() => userInput.focus(), 300);
-    } else {
-        showToast('Veuillez entrer un User AD ID valide.', 'error');
-        userIdInput.classList.add('shake');
-        setTimeout(() => userIdInput.classList.remove('shake'), 500);
-    }
-}
-
-logoutButton.addEventListener('click', () => {
-    userAdId = null;
-    navUser.classList.add('hidden');
-    chatPage.classList.add('hidden');
-    loginPage.classList.remove('hidden');
-    chatLog.innerHTML = getWelcomeMessageHTML();
-    userIdInput.value = '';
-    showToast('Déconnexion réussie', 'success');
-});
-
-// ============================================
-// Chat Functionality
-// ============================================
-sendButton.addEventListener('click', sendMessage);
-userInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendMessage();
-    }
-});
-
-// Auto-resize textarea
-userInput.addEventListener('input', () => {
-    userInput.style.height = 'auto';
-    userInput.style.height = Math.min(userInput.scrollHeight, 150) + 'px';
-    sendButton.disabled = !userInput.value.trim();
-});
-
-// Quick actions and suggestion chips
-document.querySelectorAll('.quick-btn, .chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const question = btn.dataset.question;
-        if (question) {
+    // Quick action buttons
+    document.addEventListener('click', (e) => {
+        if (e.target.closest('.quick-btn')) {
+            const question = e.target.closest('.quick-btn').dataset.question;
             userInput.value = question;
-            userInput.dispatchEvent(new Event('input'));
             sendMessage();
         }
     });
 });
 
-// New chat button
-newChatBtn.addEventListener('click', () => {
-    chatLog.innerHTML = getWelcomeMessageHTML();
-    messageCounter = 0;
-    showToast('Nouvelle conversation démarrée', 'success');
-});
-
+// ============================================
+// Send Message
+// ============================================
 async function sendMessage() {
-    const question = userInput.value.trim();
-    if (!question || !userAdId) return;
+    const message = userInput.value.trim();
+    
+    if (!message) return;
 
-    // Remove welcome message if present
-    const welcomeMsg = chatLog.querySelector('.welcome-message');
-    if (welcomeMsg) welcomeMsg.remove();
-
-    appendMessage(question, 'user');
+    // Clear input
     userInput.value = '';
     userInput.style.height = 'auto';
-    sendButton.disabled = true;
+
+    // Remove welcome message if present
+    const welcomeMsg = document.querySelector('.welcome-message');
+    if (welcomeMsg) {
+        welcomeMsg.remove();
+    }
+
+    // Add user message to chat
+    addMessage(message, 'user');
 
     // Show typing indicator
     typingIndicator.classList.remove('hidden');
-    chatLog.scrollTop = chatLog.scrollHeight;
 
     try {
         const response = await fetch(`${API_URL}/ask/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_ad_id: userAdId, question: question })
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                user_ad_id: userAdId,
+                question: message
+            })
         });
 
         if (!response.ok) {
-            throw new Error(`Erreur HTTP: ${response.status}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+
+        // Hide typing indicator
         typingIndicator.classList.add('hidden');
-        appendMessage(data.answer, 'bot', data.sources, data.response_id);
+
+        // Add assistant response
+        addMessage(data.answer, 'assistant', data.sources, data.response_id);
+
     } catch (error) {
-        console.error("Erreur lors de l'envoi du message:", error);
+        console.error('Error:', error);
         typingIndicator.classList.add('hidden');
-        appendMessage("Désolé, une erreur est survenue. Veuillez réessayer.", 'bot');
-        showToast('Erreur de connexion au serveur', 'error');
+        
+        showToast('Une erreur est survenue. Veuillez réessayer.', 'error');
+        
+        addMessage(
+            "Désolé, une erreur s'est produite. Veuillez réessayer.",
+            'assistant'
+        );
     }
 }
 
-function appendMessage(text, sender, sources = null, responseId = null) {
+// ============================================
+// Add Message to Chat
+// ============================================
+function addMessage(text, sender, sources = null, responseId = null) {
     messageCounter++;
-    const messageId = `msg-${messageCounter}`;
-    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
+    
     const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', `${sender}-message`);
-    messageDiv.id = messageId;
+    messageDiv.className = `message ${sender}`;
+    messageDiv.id = `msg-${messageCounter}`;
 
-    let html = `
-        <div class="message-content">
-            ${formatMessage(text)}
-        </div>
-        <div class="message-time">${time}</div>
-    `;
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = text;
 
-    // Add sources for bot messages
-    if (sender === 'bot' && sources && sources.length > 0) {
-        html += `
-            <div class="sources">
-                <div class="sources-header">
-                    <i class="fas fa-book-open"></i>
-                    <span>Sources GLPI</span>
-                </div>
-                <ul>
-                    ${sources.map(source => `
-                        <li>
-                            <i class="fas fa-file-alt"></i>
-                            <span>${source.type} #${source.id}: ${source.title}</span>
-                        </li>
-                    `).join('')}
-                </ul>
-            </div>
-        `;
+    const timeDiv = document.createElement('div');
+    timeDiv.className = 'message-time';
+    timeDiv.textContent = getCurrentTime();
+
+    messageDiv.appendChild(contentDiv);
+    messageDiv.appendChild(timeDiv);
+
+    // Add sources if present (for assistant messages)
+    if (sources && sources.length > 0) {
+        const sourcesDiv = createSourcesElement(sources);
+        messageDiv.appendChild(sourcesDiv);
     }
 
-    // Add feedback for bot messages
-    if (sender === 'bot' && responseId) {
-        html += `
-            <div class="feedback-container" id="feedback-${messageId}">
-                <span class="feedback-label">Cette réponse vous a-t-elle aidé ?</span>
-                <button class="feedback-btn positive" data-rating="positive" data-response-id="${responseId}" data-message-id="${messageId}" title="Bonne réponse">
-                    👍
-                </button>
-                <button class="feedback-btn negative" data-rating="negative" data-response-id="${responseId}" data-message-id="${messageId}" title="Mauvaise réponse">
-                    👎
-                </button>
-            </div>
-        `;
+    // Add feedback buttons for assistant messages
+    if (sender === 'assistant' && responseId) {
+        const feedbackDiv = createFeedbackElement(responseId, messageCounter);
+        messageDiv.appendChild(feedbackDiv);
     }
 
-    messageDiv.innerHTML = html;
     chatLog.appendChild(messageDiv);
 
-    // Add feedback event listeners
-    if (sender === 'bot') {
-        const feedbackBtns = messageDiv.querySelectorAll('.feedback-btn');
-        feedbackBtns.forEach(btn => {
-            btn.addEventListener('click', () => handleFeedback(btn));
-        });
-    }
-
+    // Scroll to bottom
     chatLog.scrollTop = chatLog.scrollHeight;
+
+    // Animation
+    messageDiv.style.animation = 'fadeIn 0.3s ease';
 }
 
-function formatMessage(text) {
-    // Simple formatting: convert newlines to <br>
-    return text.replace(/\n/g, '<br>');
+// ============================================
+// Create Sources Element
+// ============================================
+function createSourcesElement(sources) {
+    const sourcesContainer = document.createElement('div');
+    sourcesContainer.className = 'sources';
+    sourcesContainer.style.marginTop = '10px';
+    sourcesContainer.style.padding = '10px';
+    sourcesContainer.style.background = '#F5F5F5';
+    sourcesContainer.style.borderRadius = '4px';
+    sourcesContainer.style.fontSize = '13px';
+
+    const header = document.createElement('div');
+    header.innerHTML = '<strong><i class="fas fa-book"></i> Sources:</strong>';
+    header.style.marginBottom = '8px';
+    header.style.color = '#FF6600';
+
+    const sourcesList = document.createElement('ul');
+    sourcesList.style.listStyle = 'none';
+    sourcesList.style.margin = '0';
+    sourcesList.style.padding = '0';
+
+    sources.forEach(source => {
+        const li = document.createElement('li');
+        li.innerHTML = `<i class="fas fa-file-alt" style="color: #FF6600; margin-right: 8px;"></i>${source}`;
+        li.style.padding = '4px 0';
+        li.style.color = '#333333';
+        sourcesList.appendChild(li);
+    });
+
+    sourcesContainer.appendChild(header);
+    sourcesContainer.appendChild(sourcesList);
+
+    return sourcesContainer;
 }
 
-async function handleFeedback(button) {
-    const messageId = button.dataset.messageId;
-    const responseId = button.dataset.responseId;
-    const rating = button.dataset.rating;
-    const container = document.getElementById(`feedback-${messageId}`);
-    const isValid = rating === 'positive';
+// ============================================
+// Create Feedback Element
+// ============================================
+function createFeedbackElement(responseId, messageId) {
+    const feedbackContainer = document.createElement('div');
+    feedbackContainer.className = 'feedback-container';
+    feedbackContainer.id = `feedback-${messageId}`;
+    feedbackContainer.style.marginTop = '12px';
+    feedbackContainer.style.display = 'flex';
+    feedbackContainer.style.alignItems = 'center';
+    feedbackContainer.style.gap = '10px';
 
-    // Désactiver les boutons pendant l'envoi
-    const allBtns = container.querySelectorAll('.feedback-btn');
-    allBtns.forEach(btn => btn.disabled = true);
+    const label = document.createElement('span');
+    label.className = 'feedback-label';
+    label.textContent = 'Cette réponse vous a-t-elle aidé ?';
+    label.style.fontSize = '13px';
+    label.style.color = '#666666';
+
+    const positiveBtn = document.createElement('button');
+    positiveBtn.className = 'feedback-btn positive';
+    positiveBtn.innerHTML = '👍';
+    positiveBtn.style.fontSize = '20px';
+    positiveBtn.style.background = 'transparent';
+    positiveBtn.style.border = 'none';
+    positiveBtn.style.cursor = 'pointer';
+    positiveBtn.style.padding = '5px 10px';
+    positiveBtn.style.borderRadius = '4px';
+    positiveBtn.style.transition = 'background 0.2s';
+    positiveBtn.title = 'Bonne réponse';
+
+    const negativeBtn = document.createElement('button');
+    negativeBtn.className = 'feedback-btn negative';
+    negativeBtn.innerHTML = '👎';
+    negativeBtn.style.fontSize = '20px';
+    negativeBtn.style.background = 'transparent';
+    negativeBtn.style.border = 'none';
+    negativeBtn.style.cursor = 'pointer';
+    negativeBtn.style.padding = '5px 10px';
+    negativeBtn.style.borderRadius = '4px';
+    negativeBtn.style.transition = 'background 0.2s';
+    negativeBtn.title = 'Mauvaise réponse';
+
+    positiveBtn.addEventListener('click', () => handleFeedback(responseId, true, feedbackContainer));
+    negativeBtn.addEventListener('click', () => handleFeedback(responseId, false, feedbackContainer));
+
+    positiveBtn.addEventListener('mouseenter', () => {
+        positiveBtn.style.background = 'rgba(16, 185, 129, 0.1)';
+    });
+    positiveBtn.addEventListener('mouseleave', () => {
+        positiveBtn.style.background = 'transparent';
+    });
+
+    negativeBtn.addEventListener('mouseenter', () => {
+        negativeBtn.style.background = 'rgba(239, 68, 68, 0.1)';
+    });
+    negativeBtn.addEventListener('mouseleave', () => {
+        negativeBtn.style.background = 'transparent';
+    });
+
+    feedbackContainer.appendChild(label);
+    feedbackContainer.appendChild(positiveBtn);
+    feedbackContainer.appendChild(negativeBtn);
+
+    return feedbackContainer;
+}
+
+// ============================================
+// Handle Feedback
+// ============================================
+async function handleFeedback(responseId, isValid, container) {
+    const buttons = container.querySelectorAll('.feedback-btn');
+    buttons.forEach(btn => btn.disabled = true);
 
     try {
-        // Envoyer le feedback au serveur
         const response = await fetch(`${API_URL}/feedback/`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
-                response_id: parseInt(responseId),
+                response_id: responseId,
                 is_valid: isValid
             })
         });
@@ -263,118 +274,62 @@ async function handleFeedback(button) {
             throw new Error('Erreur lors de l\'envoi du feedback');
         }
 
-        // Masquer les boutons non sélectionnés
-        allBtns.forEach(btn => {
-            if (btn === button) {
-                btn.classList.add('selected');
-            } else {
-                btn.style.display = 'none';
-            }
-        });
+        // Hide buttons
+        buttons.forEach(btn => btn.style.display = 'none');
+        
+        // Hide label
+        const label = container.querySelector('.feedback-label');
+        if (label) label.style.display = 'none';
 
-        // Ajouter le message de remerciement
+        // Add thank you message
         const thanks = document.createElement('span');
-        thanks.classList.add('feedback-thanks');
+        thanks.style.fontSize = '13px';
+        thanks.style.color = '#10b981';
+        thanks.style.fontWeight = '500';
         thanks.innerHTML = '<i class="fas fa-check"></i> Merci pour votre retour !';
         container.appendChild(thanks);
 
-        // Masquer le label
-        container.querySelector('.feedback-label').style.display = 'none';
-
-        // Afficher le toast
-        const messages = {
-            positive: 'Merci ! Votre retour positif a été enregistré 😊',
-            negative: 'Merci pour votre retour. Nous allons nous améliorer !'
-        };
-        showToast(messages[rating], 'success');
+        showToast(
+            isValid ? 'Merci ! Votre retour positif a été enregistré 😊' : 'Merci pour votre retour. Nous allons nous améliorer !',
+            'success'
+        );
 
     } catch (error) {
         console.error('Erreur feedback:', error);
         showToast('Erreur lors de l\'envoi du feedback', 'error');
-        // Réactiver les boutons en cas d'erreur
-        allBtns.forEach(btn => btn.disabled = false);
+        buttons.forEach(btn => btn.disabled = false);
     }
 }
 
-function getWelcomeMessageHTML() {
-    return `
-        <div class="welcome-message">
-            <div class="welcome-icon">
-                <i class="fas fa-hand-wave"></i>
-            </div>
-            <h3>Bonjour ! Je suis votre assistant GLPI</h3>
-            <p>Je peux vous aider avec vos questions concernant le support informatique, 
-               les tickets GLPI et la documentation technique.</p>
-            <div class="quick-actions">
-                <button class="quick-btn" data-question="Quels sont mes tickets ouverts ?">
-                    <i class="fas fa-folder-open"></i>
-                    Mes tickets ouverts
-                </button>
-                <button class="quick-btn" data-question="Comment puis-je créer un nouveau ticket ?">
-                    <i class="fas fa-plus"></i>
-                    Créer un ticket
-                </button>
-                <button class="quick-btn" data-question="Rechercher dans la base de connaissances">
-                    <i class="fas fa-search"></i>
-                    Rechercher
-                </button>
-            </div>
-        </div>
-    `;
+// ============================================
+// Utility Functions
+// ============================================
+function getCurrentTime() {
+    const now = new Date();
+    return now.toLocaleTimeString('fr-FR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
 }
 
-// ============================================
-// Toast Notifications
-// ============================================
-function showToast(message, type = 'success') {
+function showToast(message, type = 'info') {
     const toast = document.createElement('div');
-    toast.classList.add('toast', type);
+    toast.className = `toast ${type}`;
 
-    const icons = {
-        success: 'fa-check-circle',
-        error: 'fa-exclamation-circle',
-        warning: 'fa-exclamation-triangle'
-    };
+    let icon = 'fa-info-circle';
+    if (type === 'success') icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-exclamation-circle';
 
     toast.innerHTML = `
-        <i class="fas ${icons[type]}"></i>
+        <i class="fas ${icon}"></i>
         <span>${message}</span>
     `;
 
     toastContainer.appendChild(toast);
 
-    // Remove after 4 seconds
+    // Auto remove after 3 seconds
     setTimeout(() => {
-        toast.style.animation = 'slideInRight 0.3s ease reverse';
+        toast.style.animation = 'slideIn 0.3s ease reverse';
         setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    }, 3000);
 }
-
-// ============================================
-// Initialization
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    // Add shake animation CSS
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
-            40%, 80% { transform: translateX(5px); }
-        }
-        .shake { animation: shake 0.5s ease; }
-    `;
-    document.head.appendChild(style);
-
-    // Re-attach quick-btn listeners after DOM is ready
-    document.querySelectorAll('.quick-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const question = btn.dataset.question;
-            if (question && userAdId) {
-                userInput.value = question;
-                userInput.dispatchEvent(new Event('input'));
-                sendMessage();
-            }
-        });
-    });
-});

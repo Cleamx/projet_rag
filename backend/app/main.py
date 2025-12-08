@@ -49,6 +49,13 @@ class AskRequest(BaseModel):
     question: str
 
 
+class FeedbackRequest(BaseModel):
+    """Modèle de requête pour le feedback."""
+
+    response_id: int
+    is_valid: bool
+
+
 @app.get("/glpi/preview/{source_type}")
 def preview_glpi_data(source_type: str):
     """Aperçu des données GLPI par type.
@@ -123,6 +130,46 @@ def ask_question(
             "sources": sources,
         }
 
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/feedback/")
+def submit_feedback(
+    request: FeedbackRequest, session: Session = Depends(get_session)
+):
+    """Endpoint pour soumettre un feedback sur une réponse.
+
+    Args:
+        request: Requête contenant response_id et is_valid
+        session: Session SQLModel pour accès base de données
+
+    Returns:
+        Dict avec message de confirmation
+
+    Raises:
+        HTTPException: Si la réponse n'existe pas ou erreur serveur
+    """
+    try:
+        db_reponse = session.get(Reponse, request.response_id)
+        if not db_reponse:
+            raise HTTPException(
+                status_code=404, detail="Réponse non trouvée"
+            )
+
+        # Mise à jour de la validité (1 pour valide, -1 pour invalide)
+        db_reponse.validite = 1 if request.is_valid else -1
+        session.add(db_reponse)
+        session.commit()
+
+        return {
+            "message": "Feedback enregistré avec succès",
+            "response_id": request.response_id,
+            "is_valid": request.is_valid,
+        }
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
