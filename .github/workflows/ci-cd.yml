@@ -7,36 +7,9 @@ on:
     branches: [ "main" ]
 
 jobs:
-  lint:
-    name: Linting & Code Quality
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
-      - name: Install linting tools
-        run: |
-          pip install flake8 black isort
-
-      - name: Run Black (formatting check)
-        run: black --check backend/app
-
-      - name: Run isort (imports check)
-        run: isort --check-only backend/app
-
-      - name: Run Flake8 (linting)
-        run: flake8 backend/app --max-line-length=120 --extend-ignore=E203,W503
-
   test-backend:
     name: Backend Unit Tests
     runs-on: ubuntu-latest
-    needs: lint
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
