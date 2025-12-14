@@ -7,15 +7,17 @@ from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from . import llm
 from .database import DATABASE_URL
 from .database import create_db_and_tables
 from .database import engine
 from .glpi_mock import glpi_mock
+from .init_techniciens import get_technicien_by_nom, init_techniciens
 from .models import Question
 from .models import Reponse
+from .models import Technicien
 
 app = FastAPI(
     title="RAG GLPI avec Ollama + Mistral",
@@ -35,6 +37,7 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    init_techniciens()
 
 
 def get_session():
@@ -114,10 +117,21 @@ def ask_question(
         session.commit()
         session.refresh(db_question)
 
-        llm_response, sources = llm.get_rag_response(request.question)
+        llm_response, sources, category = llm.get_rag_response(request.question)
+
+        # Récupérer le technicien correspondant à la catégorie
+        technicien_id = None
+        if category:
+            technicien = session.exec(
+                select(Technicien).where(Technicien.nom == category)
+            ).first()
+            if technicien:
+                technicien_id = technicien.id
 
         db_reponse = Reponse(
-            reponse_label=llm_response, question_id=db_question.id
+            reponse_label=llm_response,
+            question_id=db_question.id,
+            technicien_id=technicien_id,
         )
         session.add(db_reponse)
         session.commit()

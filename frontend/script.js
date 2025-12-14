@@ -173,7 +173,9 @@ function createSourcesElement(sources) {
 
     sources.forEach(source => {
         const li = document.createElement('li');
-        li.innerHTML = `<i class="fas fa-file-alt" style="color: #FF6600; margin-right: 8px;"></i>${source}`;
+        // Afficher le titre de la source et son type
+        const sourceText = source.title ? `${source.title} (${source.type})` : `Source ${source.id} (${source.type})`;
+        li.innerHTML = `<i class="fas fa-file-alt" style="color: #FF6600; margin-right: 8px;"></i>${sourceText}`;
         li.style.padding = '4px 0';
         li.style.color = '#333333';
         sourcesList.appendChild(li);
