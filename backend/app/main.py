@@ -7,13 +7,14 @@ from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from . import llm
 from .database import DATABASE_URL
 from .database import create_db_and_tables
 from .database import engine
 from .glpi_mock import glpi_mock
+from .init_techniciens import get_technicien_by_nom, init_techniciens
 from .models import Question
 from .models import Reponse
 from .models import GLPITicket
@@ -47,6 +48,7 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+    init_techniciens()
 
 
 def get_session():
@@ -168,8 +170,16 @@ def ask_question(
         session.commit()
         session.refresh(db_question)
 
-        # 3. Chercher une réponse dans le RAG
-        llm_response, sources = llm.get_rag_response(request.question)
+        llm_response, sources, category = llm.get_rag_response(request.question)
+
+        # Récupérer le technicien correspondant à la catégorie
+        technicien_id = None
+        if category:
+            technicien = session.exec(
+                select(Technicien).where(Technicien.nom == category)
+            ).first()
+            if technicien:
+                technicien_id = technicien.id
 
         # 4. 🔥 Si pas de sources, créer un ticket automatiquement
         ticket_created = False
@@ -235,7 +245,9 @@ Un technicien vous répondra dans les plus brefs délais. Vous pouvez suivre l'�
 
         # 5. Sauvegarder la réponse
         db_reponse = Reponse(
-            reponse_label=llm_response, question_id=db_question.id
+            reponse_label=llm_response,
+            question_id=db_question.id,
+            technicien_id=technicien_id,
         )
         session.add(db_reponse)
         session.commit()
