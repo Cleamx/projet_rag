@@ -20,10 +20,10 @@ class GLPIMockData:
             {
                 "title": "Problème de connexion VPN",
                 "description": """Impossible de se connecter au VPN de
-                 l'entreprise depuis ce matin. Message d'erreur: timeout.""",
+                l'entreprise depuis ce matin. Message d'erreur: timeout.""",
                 "solution": """Vérifier que le client VPN est à jour.
-                 Réinitialiser les paramètres réseau. Contacter le support si
-                 le problème persiste.""",
+                Réinitialiser les paramètres réseau. Contacter le support si
+                le problème persiste.""",
                 "category": "Réseau",
                 "status": "Résolu",
                 "priority": "Haute"
@@ -226,8 +226,8 @@ Si le reset en libre-service échoue, contacter:
                 "id": 1,
                 "question": "Comment changer mon mot de passe Windows ?",
                 "answer": """Appuyez sur Ctrl+Alt+Suppr et sélectionnez
-                 'Modifier le mot de passe'. Ou utilisez le portail en libre
-                 -service: https://password.entreprise.com""",
+                'Modifier le mot de passe'. Ou utilisez le portail en libre
+                -service: https://password.entreprise.com""",
                 "category": "Compte",
                 "popularity": 95
             },
@@ -235,8 +235,8 @@ Si le reset en libre-service échoue, contacter:
                 "id": 2,
                 "question": "Où trouver les pilotes d'imprimante ?",
                 "answer": """Les pilotes sont disponibles sur l'intranet dans
-                 la section 'Ressources IT' ou sur
-                  \\\\serveur\\drivers\\imprimantes""",
+                la section 'Ressources IT' ou sur
+                \\\\serveur\\drivers\\imprimantes""",
                 "category": "Matériel",
                 "popularity": 78
             },
@@ -244,18 +244,18 @@ Si le reset en libre-service échoue, contacter:
                 "id": 3,
                 "question": "Comment accéder au VPN en télétravail ?",
                 "answer": """Utilisez Cisco AnyConnect avec l'adresse
-                 vpn.entreprise.com et vos identifiants habituels.
-                 Guide complet disponible sur l'intranet.""",
+                vpn.entreprise.com et vos identifiants habituels.
+                Guide complet disponible sur l'intranet.""",
                 "category": "Réseau",
                 "popularity": 89
             },
             {
                 "id": 4,
                 "question": """Quelle est la procédure pour demander un
-                 nouveau logiciel ?""",
+                nouveau logiciel ?""",
                 "answer": """Créez un ticket dans GLPI en précisant le
-                 logiciel souhaité, l'usage prévu et la validation de votre
-                 manager.""",
+                logiciel souhaité, l'usage prévu et la validation de votre
+                manager.""",
                 "category": "Logiciel",
                 "popularity": 65
             },
@@ -263,8 +263,8 @@ Si le reset en libre-service échoue, contacter:
                 "id": 5,
                 "question": "Comment configurer ma messagerie sur mobile ?",
                 "answer": """Installez Microsoft Outlook sur votre mobile.
-                 Ajoutez votre adresse email professionnelle. Le profil
-                 Exchange se configurera automatiquement.""",
+                Ajoutez votre adresse email professionnelle. Le profil
+                Exchange se configurera automatiquement.""",
                 "category": "Messagerie",
                 "popularity": 72
             }
@@ -287,7 +287,7 @@ Si le reset en libre-service échoue, contacter:
                     "id": ticket["id"],
                     "title": ticket["title"],
                     "content": f"""**Problème**:
-                     {ticket['description']}\n\n
+                    {ticket['description']}\n\n
                      **Solution**: {ticket['solution']}""",
                     "metadata": {
                         "category": ticket["category"],
@@ -322,7 +322,7 @@ Si le reset en libre-service échoue, contacter:
                     "id": faq["id"],
                     "title": faq["question"],
                     "content": f"""**Question**: {faq['question']}
-                     \n\n**Réponse**: {faq['answer']}""",
+                    \n\n**Réponse**: {faq['answer']}""",
                     "metadata": {
                         "category": faq["category"],
                         "popularity": faq["popularity"]

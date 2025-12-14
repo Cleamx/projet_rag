@@ -27,9 +27,8 @@ services:
         condition: service_started
     ports:
       - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db/mydatabase
-      - OLLAMA_HOST=http://ollama:11434
+    env_file:
+      - .env
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./backend/app:/app/app
@@ -45,6 +44,14 @@ services:
       - ollama_data:/root/.ollama
     restart: unless-stopped
 
+
+
 volumes:
   postgres_data:
   ollama_data:
+
+networks:
+  projet_rag_network:
+    driver: bridge
+  glpi-network: #reseau pour glpi
+    external: true

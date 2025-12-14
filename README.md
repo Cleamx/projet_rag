@@ -97,8 +97,8 @@ curl http://localhost:8000/glpi/stats
 
 # Poser une question
 curl -X POST http://localhost:8000/ask/ \
-  -H "Content-Type: application/json" \
-  -d '{"user_ad_id": 1, "question": "Comment configurer le VPN ?"}'
+    -H "Content-Type: application/json" \
+    -d '{"user_ad_id": 1, "question": "Comment configurer le VPN ?"}'
 ```
 
 **Réponse attendue :**
@@ -401,3 +401,80 @@ Voilà ! Vous avez un assistant IT helpdesk intelligent avec RAG fonctionnel ! �
 - Vérifier que `MISTRAL_API_KEY` est valide.
 - Activer les logs (si disponible) pour tracer les requêtes.
 - S'assurer que la branche locale est à jour: `git pull --rebase origin test_api_mistral`
+
+====================================================================================================
+====================================================================================================
+==============================================================================================
+
+## Intégration GLPI réel, Creation de tickets,Alimentation base de données ( RAG):
+# 🤖 Assistant IA Helpdesk - RAG Auto-enrichissement
+
+Système de helpdesk intelligent avec auto-apprentissage via webhook GLPI.
+
+## 🚀 Quick Start
+```bash
+docker-compose up -d
+```
+
+- **API** : http://localhost:8000/docs
+- **GLPI** : http://localhost:8081 (admin/admin)
+
+## ✨ Fonctionnalités
+
+- ✅ Recherche vectorielle avec pgvector (similarité cosine)
+- ✅ Seuil 60% : Si solution existe → Pas de ticket créé
+- ✅ Webhook GLPI automatique → RAG s'enrichit automatiquement
+- ✅ Clustering intelligent des tickets
+
+## 🧪 Test rapide
+
+**Poser une question** :
+```bash
+curl -X POST http://localhost:8000/ask/ \
+  -H "Content-Type: application/json" \
+  -d '{"user_ad_id": 1, "question": "Ma webcam ne marche plus"}'
+```
+
+**Créer un ticket** :
+```bash
+curl -X POST http://localhost:8000/glpi/create-ticket \
+  -H "Content-Type: application/json" \
+  -d '{"user_ad_id": 1, "title": "Problème webcam", "description": "..."}'
+```
+
+**Stats** :
+```bash
+curl http://localhost:8000/glpi/stats
+```
+
+## ⚙️ Configuration Webhook GLPI
+
+1. GLPI → Configuration → Webhooks → Ajouter
+2. URL : `http://fastapi_api:8000/glpi/webhook/ticket-resolved`
+3. Événement : **Résolu**
+4. Activer action automatique `queuedwebhook`
+
+## 🔍 Workflow
+```
+Question → RAG cherche → Similarité ≥ 60% ? → OUI → Solution trouvée ✅
+                                           ↓ NON
+                                    Ticket créé → Technicien résout
+                                           ↓
+                                    Webhook → RAG enrichi 🎉
+```
+
+## 🐛 Debug
+```bash
+# Logs
+docker-compose logs -f api
+
+# PostgreSQL
+docker exec -it postgres_db psql -U user -d mydatabase
+```
+
+## 👥 Stack
+
+- FastAPI + PostgreSQL (pgvector)
+- Ollama (Mistral + nomic-embed-text)
+- GLPI 10.0
+- Docker Compose
