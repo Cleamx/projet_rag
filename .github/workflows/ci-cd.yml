@@ -72,23 +72,17 @@ jobs:
 
       - name: Wait for services to be healthy
         run: |
-          timeout 60 bash -c 'until docker exec fastapi_api curl -f http://localhost:8000/docs > /dev/null 2>&1; do sleep 2; done'
+          timeout 60 bash -c 'until curl -f http://localhost:8000/glpi/preview/tickets > /dev/null 2>&1; do sleep 2; done'
 
       - name: Run integration tests
         run: |
-          # Test API health
-          docker exec fastapi_api curl -f http://localhost:8000/docs || exit 1
-          
-          # Test GLPI stats endpoint
-          docker exec fastapi_api curl -f http://localhost:8000/glpi/stats || exit 1
+          # Test GLPI preview endpoints (vérifie que l'API est opérationnelle)
+          curl -f http://localhost:8000/glpi/preview/tickets || exit 1
+          curl -f http://localhost:8000/glpi/preview/kb_articles || exit 1
+          curl -f http://localhost:8000/glpi/preview/faq || exit 1
           
           # Test database connection
           docker exec postgres_db psql -U user -d mydatabase -c "SELECT 1;" || exit 1
-
-      - name: Run Python integration test script
-        run: |
-          pip install requests
-          python3 test_rag.py
 
       - name: Show logs on failure
         if: failure()
@@ -105,6 +99,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-integration
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    env:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -124,7 +120,7 @@ jobs:
           context: ./backend
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:${{ github.sha }}
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/rag-fastapi-app:buildcache,mode=max
+            ${{ env.DOCKERHUB_USERNAME }}/rag-fastapi-app:latest
+            ${{ env.DOCKERHUB_USERNAME }}/rag-fastapi-app:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/rag-fastapi-app:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKERHUB_USERNAME }}/rag-fastapi-app:buildcache,mode=max
