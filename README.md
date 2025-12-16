@@ -11,14 +11,14 @@ Application web de RAG (Retrieval-Augmented Generation) pour un helpdesk IT avec
 ### Démarrage
 
 ```bash
-# 1. Lancer tous les services
+# Lancer tous les services
 docker-compose up -d
 
-# 2. Télécharger les modèles Ollama (première fois)
+# Télécharger les modèles Ollama (première fois)
 docker exec -it ollama_service ollama pull mistral
 docker exec -it ollama_service ollama pull nomic-embed-text
 
-# 3. Accéder à l'application
+# Accéder à l'application
 open http://localhost:8000
 ```
 
@@ -40,7 +40,7 @@ open http://localhost:8000
 ### 1. Installer Ollama
 ```bash
 brew install ollama
-ollama serve  # Terminal séparé
+ollama serve
 ollama pull mistral
 ollama pull nomic-embed-text
 ```
@@ -135,13 +135,13 @@ Pour activer le build Docker automatique, ajouter dans GitHub Secrets :
 projet_rag/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py           # API FastAPI
-│   │   ├── llm.py            # Intégration Ollama + RAG
-│   │   ├── database.py       # PostgreSQL
-│   │   ├── models.py         # SQLModel (Question, Reponse, Technicien)
-│   │   ├── glpi_mock.py      # Données GLPI mockées
-│   │   └── init_techniciens.py # Catégories techniciens
-│   ├── tests/                # Tests unitaires
+│   │   ├── main.py           
+│   │   ├── llm.py            
+│   │   ├── database.py       
+│   │   ├── models.py         
+│   │   ├── glpi_mock.py      
+│   │   └── init_techniciens.py 
+│   ├── tests/               
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── frontend/
@@ -149,7 +149,7 @@ projet_rag/
 │   ├── script.js
 │   └── style.css
 ├── .github/workflows/
-│   └── ci-cd.yml            # Pipeline GitHub Actions
+│   └── ci-cd.yml            
 ├── docker-compose.yml
 └── README.md
 ```
