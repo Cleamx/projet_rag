@@ -30,6 +30,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://user:password@db/mydatabase
       - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_API_KEY=782797b42f974e2e97918e27368e652e.aSUGtXrliyq6CsvKxBfMi4iO
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./backend/app:/app/app
