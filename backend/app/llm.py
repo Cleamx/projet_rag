@@ -155,7 +155,7 @@ def get_rag_response(
     if settings.USE_MOCK:
         glpi_results = glpi_mock.search_all(question, limit=top_k)
     else:
-        glpi_results = glpi_service.search_all(question, limit=top_k)
+        glpi_results = glpi_service.get_user_tickets(question, limit=top_k)
 
     if not glpi_results:
         use_web_search = True
