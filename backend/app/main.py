@@ -19,6 +19,16 @@ from .models import Question
 from .models import Reponse
 from .models import Technicien
 
+from .glpi_service import glpi_service, ad_service
+from pydantic import BaseModel
+
+class CreateTicketRequest(BaseModel):
+    username: str
+    question: str
+
+class TicketDetailsResponse(BaseModel):
+    ticket_id: int
+
 app = FastAPI(
     title="RAG GLPI avec Ollama + Mistral",
     docs_url=None,
@@ -191,6 +201,81 @@ def submit_feedback(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+# ============================================================================
+# ENDPOINTS INFRASTRUCTURE (GLPI + AD)
+# ============================================================================
+
+
+@app.post("/api/infrastructure/create_ticket")
+def infra_create_ticket(request: CreateTicketRequest):
+    """
+    Crée un ticket GLPI avec enrichissement AD.
+    
+    POST /api/infrastructure/create_ticket
+    {
+        "username": "jean.dupont",
+        "question": "Mon wifi ne fonctionne pas"
+    }
+    """
+    # Récupère infos AD
+    user_info = ad_service.get_user_info(request.username)
+    
+    # Crée ticket GLPI
+    ticket = glpi_service.create_ticket(
+        username=request.username,
+        question=request.question,
+        user_info=user_info
+    )
+    
+    if not ticket:
+        raise HTTPException(500, "Impossible de créer le ticket")
+    
+    return {
+        "success": True,
+        "ticket_id": ticket['id'],
+        "message": ticket['message'],
+        "user_info": user_info
+    }
+
+@app.get("/api/infrastructure/ticket/{ticket_id}")
+def infra_get_ticket(ticket_id: int):
+    """
+    Récupère les détails d'un ticket.
+    
+    GET /api/infrastructure/ticket/123
+    """
+    details = glpi_service.get_ticket_details(ticket_id)
+    
+    if not details:
+        raise HTTPException(404, "Ticket non trouvé")
+    
+    return details
+
+@app.get("/api/infrastructure/user_tickets/{username}")
+def infra_user_tickets(username: str, limit: int = 20):
+    """
+    Liste les tickets d'un utilisateur.
+    
+    GET /api/infrastructure/user_tickets/jean.dupont?limit=10
+    """
+    tickets = glpi_service.get_user_tickets(username, limit)
+    return {"username": username, "tickets": tickets}
+
+@app.get("/api/infrastructure/user_info/{username}")
+def infra_user_info(username: str):
+    """
+    Récupère les infos AD d'un utilisateur.
+    
+    GET /api/infrastructure/user_info/jean.dupont
+    """
+    user_info = ad_service.get_user_info(username)
+    
+    if not user_info:
+        raise HTTPException(404, "Utilisateur non trouvé dans l'AD")
+    
+    return user_info
 
 frontend_path = (
     Path("/app/frontend")
