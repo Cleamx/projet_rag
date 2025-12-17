@@ -1,11 +1,16 @@
 """Module d'intégration avec Ollama pour LLM et embeddings."""
 import os
 import re
+
 from typing import Dict, List, Optional, Tuple, Any
+
 
 import ollama
 
+from .config import settings
+from .glpi_service import glpi_service
 from .glpi_mock import glpi_mock
+
 
 # Configuration du client Ollama local (pour LLM et embeddings)
 ollama_host = os.getenv("OLLAMA_HOST", "http://ollama:11434")
@@ -18,7 +23,8 @@ MODEL_NAME = "mistral"
 EMBEDDING_MODEL_NAME = "nomic-embed-text"
 GLPI_THRESHOLD = 0.5  # Seuil de pertinence pour basculer sur la recherche web
 
-# Catégories de techniciens disponibles pour la classification
+client = ollama.Client(host=settings.OLLAMA_HOST)
+
 TECHNICIEN_CATEGORIES = {
     "Techniciens": "Support technique général, assistance informatique DSIN",
     "Réseau": "Problèmes réseau, connexion internet, wifi, câblage",
@@ -35,29 +41,16 @@ TECHNICIEN_CATEGORIES = {
 
 
 def get_embedding(text: str) -> list[float]:
-    """Génère un embedding vectoriel pour le texte donné.
-
-    Args:
-        text: Texte à vectoriser
-
-    Returns:
-        Liste de floats représentant l'embedding
-    """
-    response = client.embeddings(model=EMBEDDING_MODEL_NAME, prompt=text)
+    """Génère un embedding vectoriel."""
+    response = client.embeddings(model=settings.EMBEDDING_MODEL, prompt=text)
     return response["embedding"]
 
 
 def get_chat_response(question: str) -> str:
-    """Obtient une réponse directe du LLM.
-
-    Args:
-        question: Question à poser au modèle
-
-    Returns:
-        Réponse générée par le modèle
-    """
+    """Obtient une réponse directe du LLM."""
     response = client.chat(
-        model=MODEL_NAME, messages=[{"role": "user", "content": question}]
+        model=settings.MODEL_NAME,
+        messages=[{"role": "user", "content": question}]
     )
     return response["message"]["content"]
 
@@ -110,25 +103,14 @@ def search_web(query: str, max_results: int = 3) -> List[Dict[str, Any]]:
 
 
 def parse_category_from_response(response: str) -> Tuple[str, Optional[str]]:
-    """Parse et extrait le tag de catégorie de la réponse LLM.
-
-    Args:
-        response: Réponse brute du LLM contenant potentiellement [CATEGORY:xxx]
-
-    Returns:
-        Tuple (réponse_nettoyée, catégorie) où catégorie peut être None
-    """
-    # Regex plus souple pour capturer [CATEGORY:xxx] ou [xxx] à la fin
-    # On cherche un tag entre crochets contenant une des catégories connues
+    """Parse et extrait le tag de catégorie."""
     pattern = r'\[(?:CATEGORY:)?\s*([^\]]+)\s*\]'
     match = re.search(pattern, response)
 
     if match:
         possible_category = match.group(1).strip()
-        # Nettoyage de la réponse en enlevant tout ce qui ressemble au tag à la fin
         cleaned_response = re.sub(pattern, '', response).strip()
         
-        # Vérification si le contenu du tag correspond à une catégorie connue (case insensitive)
         for cat_name in TECHNICIEN_CATEGORIES:
             if cat_name.lower() in possible_category.lower():
                 return cleaned_response, cat_name
@@ -139,7 +121,7 @@ def parse_category_from_response(response: str) -> Tuple[str, Optional[str]]:
 
 
 def _build_categories_prompt() -> str:
-    """Construit la partie du prompt listant les catégories disponibles."""
+    """Construit la partie du prompt listant les catégories."""
     lines = ["CATÉGORIES DE TECHNICIENS DISPONIBLES:"]
     for nom, description in TECHNICIEN_CATEGORIES.items():
         lines.append(f"- {nom}: {description}")
@@ -166,7 +148,15 @@ def get_rag_response(
     context_results = []
     source_type_label = "CONTEXTE GLPI"
     print(f"glpi_results: {glpi_results}")
+
+    """Génère une réponse en utilisant RAG avec GLPI."""
     
+    # Utiliser mock ou service réel selon config
+    if settings.USE_MOCK:
+        glpi_results = glpi_mock.search_all(question, limit=top_k)
+    else:
+        glpi_results = glpi_service.search_all(question, limit=top_k)
+
     if not glpi_results:
         use_web_search = True
     else:
@@ -210,18 +200,22 @@ def get_rag_response(
             source_info = source_name
 
         context_parts.append(f"[Source {i} - {source_info}]")
+    # Construire le contexte
+    context_parts = []
+    sources = []
+
+    for i, result in enumerate(glpi_results, 1):
+        context_parts.append(f"[Source {i} - {result['source'].upper()}]")
         context_parts.append(f"Titre: {result['title']}")
         context_parts.append(result["content"])
         context_parts.append("\n---\n")
 
-        sources.append(
-            {
-                "type": result["source"],
-                "id": result["id"],
-                "title": result["title"],
-                "metadata": result["metadata"],
-            }
-        )
+        sources.append({
+            "type": result["source"],
+            "id": result["id"],
+            "title": result["title"],
+            "metadata": result["metadata"],
+        })
 
     context = "\n".join(context_parts)
     categories_prompt = _build_categories_prompt()
@@ -230,6 +224,7 @@ def get_rag_response(
 utilisant UNIQUEMENT les informations fournies dans le contexte ci-dessous. \
 Le contexte provient de : {source_type_label}.
 Si l'information n'est pas dans le contexte, dis-le clairement.
+utilisant UNIQUEMENT les informations fournies dans le contexte ci-dessous.
 
 {source_type_label}:
 {context}
@@ -244,15 +239,16 @@ INSTRUCTIONS:
 3. À LA FIN de ta réponse, ajoute un tag [CATEGORY:NomCatégorie] pour \
 indiquer quel technicien devrait traiter cette question. Choisis la \
 catégorie la plus appropriée parmi celles listées ci-dessus.
+2. À LA FIN de ta réponse, ajoute un tag [CATEGORY:NomCatégorie].
 
 RÉPONSE:"""
 
     response = client.chat(
-        model=MODEL_NAME, messages=[{"role": "user", "content": prompt}]
+        model=settings.MODEL_NAME,
+        messages=[{"role": "user", "content": prompt}]
     )
 
     raw_response = response["message"]["content"]
     cleaned_response, category = parse_category_from_response(raw_response)
 
     return cleaned_response, sources, category
-

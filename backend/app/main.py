@@ -48,7 +48,7 @@ def get_session():
 class AskRequest(BaseModel):
     """Modèle de requête pour poser une question."""
 
-    user_ad_id: int
+    user_ad_id: int =1
     question: str
 
 
@@ -117,7 +117,9 @@ def ask_question(
         session.commit()
         session.refresh(db_question)
 
+        print("🔍 Appel get_rag_response...")
         llm_response, sources, category = llm.get_rag_response(request.question)
+        print(f"✅ Réponse reçue: {llm_response[:100]}")
 
         # Récupérer le technicien correspondant à la catégorie
         technicien_id = None
@@ -145,8 +147,10 @@ def ask_question(
         }
 
     except Exception as e:
+        import traceback
+        print("🔴 ERREUR DÉTAILLÉE:")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/feedback/")
 def submit_feedback(
