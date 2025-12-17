@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 TIMEOUT = 10
 
 class GLPIService:
-    """Service pour interagir avec GLPI API."""
+    """Service pour interagir avec GLPI API.  """
     
     def __init__(self):
         self.url = settings.GLPI_URL
